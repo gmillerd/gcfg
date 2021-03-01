@@ -42,8 +42,7 @@ if (fs.existsSync(sfdccfg)) {
     }
 }
 
-cfg.set = function(key, val) {
-    cfg.store[key] = val;
+cfg.save = function() {
     fs.writeFileSync(storecfg, JSON.stringify(cfg.store, null, 3));
 };
 
