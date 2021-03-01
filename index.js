@@ -11,6 +11,7 @@ if (env == 'unknown') {
 var cfg = {
     misc: {},
     sfdc: {},
+    store: {},
     local: {}
 };
 
@@ -24,6 +25,11 @@ if (fs.existsSync(localcfg)) {
     cfg.local = require(localcfg);
 }
 
+const storecfg = __dirname + '/../../config/store.json';
+if (fs.existsSync(storecfg)) {
+    cfg.store = require(storecfg);
+}
+
 const sfdccfg = `${homedir}/sfdc/etc/jsconfig/sfdc.json`;
 if (fs.existsSync(sfdccfg)) {
     var sfdc = require(sfdccfg);
@@ -35,5 +41,10 @@ if (fs.existsSync(sfdccfg)) {
         process.exit();
     }
 }
+
+cfg.set = function(key, val) {
+    cfg.store[key] = val;
+    fs.writeFileSync(storecfg, JSON.stringify(cfg.store, null, 3));
+};
 
 module.exports = cfg;
