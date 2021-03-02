@@ -10,25 +10,18 @@ if (env == "unknown") {
 
 var cfg = {};
 
-var stubs = [{
-    name: "misc",
-    file: `${homedir}/sfdc/etc/jsconfig/misc.json`
-}, {
-    name: "sfdc",
-    file: `${homedir}/sfdc/etc/jsconfig/sfdc.json`
-}, {
-    name: "local",
-    file: `${__dirname}/../../config/default.json`
-}, {
-    name: "store",
-    file: `${__dirname}'/../../config/store.json`
-}];
+var stubs = {
+    misc: `${homedir}/sfdc/etc/jsconfig/misc.json`,
+    sfdc: `${homedir}/sfdc/etc/jsconfig/sfdc.json`,
+    local: `${__dirname}/../../config/default.json`,
+    store: `${__dirname}/../../config/store.json`,
+};
 
-stubs.forEach((e) => {
-    cfg[e.name] = {};
-    if (fs.existsSync(e.file)) {
-        if (e.name == "sfdc") {
-            var sfdc = require(e.file);
+for (const [name, file] of Object.entries(stubs)) {
+    cfg[name] = {};
+    if (fs.existsSync(file)) {
+        if (name == "sfdc") {
+            var sfdc = require(file);
             if (sfdc[env]) {
                 cfg.sfdc = sfdc[env];
             } else {
@@ -36,15 +29,13 @@ stubs.forEach((e) => {
                 process.exit();
             }
         } else {
-            cfg[e.name] = require(e.file);
+            cfg[name] = require(file);
         }
     }
-});
-
-// console.log(cfg);
+}
 
 cfg.save = function() {
-    fs.writeFileSync(stubs["store"].file, JSON.stringify(cfg.store, null, 3));
+    fs.writeFileSync(stubs["store"], JSON.stringify(cfg.store, null, 3));
 };
 
 module.exports = cfg;
