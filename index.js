@@ -1,49 +1,50 @@
-const fs = require('fs')
+const fs = require("fs");
 
-var env = process.env.NODE_ENV || 'unknown';
-const homedir = require('os').homedir();
+const env = process.env.NODE_ENV || "unknown";
+const homedir = require("os").homedir();
 
-if (env == 'unknown') {
-    console.error("missing env");
+if (env == "unknown") {
+    console.error("missing process.env");
     process.exit();
 }
 
-var cfg = {
-    misc: {},
-    sfdc: {},
-    store: {},
-    local: {}
-};
+var cfg = {};
 
-const miscfg = `${homedir}/sfdc/etc/jsconfig/misc.json`;
-if (fs.existsSync(miscfg)) {
-    cfg.misc = require(miscfg);
-}
+var stubs = [{
+    name: "misc",
+    file: `${homedir}/sfdc/etc/jsconfig/misc.json`
+}, {
+    name: "sfdc",
+    file: `${homedir}/sfdc/etc/jsconfig/sfdc.json`
+}, {
+    name: "local",
+    file: `${__dirname}/../../config/default.json`
+}, {
+    name: "store",
+    file: `${__dirname}'/../../config/store.json`
+}];
 
-const localcfg = __dirname + '/../../config/default.json';
-if (fs.existsSync(localcfg)) {
-    cfg.local = require(localcfg);
-}
-
-const storecfg = __dirname + '/../../config/store.json';
-if (fs.existsSync(storecfg)) {
-    cfg.store = require(storecfg);
-}
-
-const sfdccfg = `${homedir}/sfdc/etc/jsconfig/sfdc.json`;
-if (fs.existsSync(sfdccfg)) {
-    var sfdc = require(sfdccfg);
-
-    if (sfdc[env]) {
-        cfg.sfdc = sfdc[env];
-    } else {
-        console.error(`unknown auth ${env}`);
-        process.exit();
+stubs.forEach((e) => {
+    cfg[e.name] = {};
+    if (fs.existsSync(e.file)) {
+        if (e.name == "sfdc") {
+            var sfdc = require(e.file);
+            if (sfdc[env]) {
+                cfg.sfdc = sfdc[env];
+            } else {
+                console.error(`unknown auth ${env}`);
+                process.exit();
+            }
+        } else {
+            cfg[e.name] = require(e.file);
+        }
     }
-}
+});
+
+// console.log(cfg);
 
 cfg.save = function() {
-    fs.writeFileSync(storecfg, JSON.stringify(cfg.store, null, 3));
+    fs.writeFileSync(stubs["store"].file, JSON.stringify(cfg.store, null, 3));
 };
 
 module.exports = cfg;
